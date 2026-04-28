@@ -25,29 +25,7 @@ def _requires_unix_version(sysname, min_version):  # pragma: no cover
     For example, @_requires_unix_version('FreeBSD', (7, 2)) raises SkipTest if
     the FreeBSD version is less than 7.2.
     """
-
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kw):
-            if platform.system() == sysname:
-                version_txt = platform.release().split("-", 1)[0]
-                try:
-                    version = tuple(map(int, version_txt.split(".")))
-                except ValueError:
-                    pass
-                else:
-                    if version < min_version:
-                        min_version_txt = ".".join(map(str, min_version))
-                        raise unittest.SkipTest(
-                            "%s version %s or higher required, not %s"
-                            % (sysname, min_version_txt, version_txt)
-                        )
-            return func(*args, **kw)
-
-        wrapper.min_version = min_version
-        return wrapper
-
-    return decorator
+    pass
 
 
 def requires_freebsd_version(*min_version):  # pragma: no cover
@@ -57,7 +35,7 @@ def requires_freebsd_version(*min_version):  # pragma: no cover
     For example, @requires_freebsd_version(7, 2) raises SkipTest if the FreeBSD
     version is less than 7.2.
     """
-    return _requires_unix_version("FreeBSD", min_version)
+    pass
 
 
 def requires_linux_version(*min_version):  # pragma: no cover
@@ -67,7 +45,7 @@ def requires_linux_version(*min_version):  # pragma: no cover
     For example, @requires_linux_version(2, 6, 32) raises SkipTest if the Linux
     version is less than 2.6.32.
     """
-    return _requires_unix_version("Linux", min_version)
+    pass
 
 
 def requires_mac_ver(*min_version):  # pragma: no cover
@@ -77,29 +55,7 @@ def requires_mac_ver(*min_version):  # pragma: no cover
     For example, @requires_mac_ver(10, 5) raises SkipTest if the OS X version
     is lesser than 10.5.
     """
-
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kw):
-            if sys.platform == "darwin":
-                version_txt = platform.mac_ver()[0]
-                try:
-                    version = tuple(map(int, version_txt.split(".")))
-                except ValueError:
-                    pass
-                else:
-                    if version < min_version:
-                        min_version_txt = ".".join(map(str, min_version))
-                        raise unittest.SkipTest(
-                            "Mac OS X %s or higher required, not %s"
-                            % (min_version_txt, version_txt)
-                        )
-            return func(*args, **kw)
-
-        wrapper.min_version = min_version
-        return wrapper
-
-    return decorator
+    pass
 
 
 # Don't use "localhost", since resolving it uses the DNS under recent
@@ -184,12 +140,7 @@ def find_unused_port(
     calling code has a chance to bind the returned port.  We can deal with this
     issue if/when we come across it.
     """
-
-    tempsock = socket.socket(family, socktype)
-    port = bind_port(tempsock)
-    tempsock.close()
-    del tempsock
-    return port
+    pass
 
 
 def bind_port(sock, host=HOST):  # pragma: no cover
@@ -206,38 +157,11 @@ def bind_port(sock, host=HOST):  # pragma: no cover
     on Windows), it will be set on the socket.  This will prevent anyone else
     from bind()'ing to our host/port for the duration of the test.
     """
-
-    if sock.family == socket.AF_INET and sock.type == socket.SOCK_STREAM:
-        if hasattr(socket, "SO_REUSEADDR"):
-            if sock.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR) == 1:
-                raise TestFailed(
-                    "tests should never set the SO_REUSEADDR "
-                    "socket option on TCP/IP sockets!"
-                )
-        if hasattr(socket, "SO_REUSEPORT"):
-            try:
-                opt = sock.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT)
-                if opt == 1:
-                    raise TestFailed(
-                        "tests should never set the SO_REUSEPORT "
-                        "socket option on TCP/IP sockets!"
-                    )
-            except OSError:
-                # Python's socket module was compiled using modern headers
-                # thus defining SO_REUSEPORT but this process is running
-                # under an older kernel that does not support SO_REUSEPORT.
-                pass
-        if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
-
-    sock.bind((host, 0))
-    port = sock.getsockname()[1]
-    return port
+    pass
 
 
 def check_errno(errno, exc):
-    assert isinstance(exc, OSError), exc
-    assert exc.errno == errno, (exc, errno)
+    pass
 
 
 class TestHandler(logging.Handler):
@@ -246,28 +170,14 @@ class TestHandler(logging.Handler):
         self.queue = queue
 
     def emit(self, record):
-        time.sleep(0)
-        self.queue.put_nowait(record)
+        pass
 
 
 @contextlib.contextmanager
 def log_hook(logname, queue):
-    logger = logging.getLogger(logname)
-    handler = TestHandler(queue)
-    logger.addHandler(handler)
-    level = logger.level
-    logger.setLevel(logging.DEBUG)
-    try:
-        yield
-    finally:
-        logger.removeHandler(handler)
-        logger.level = level
+    pass
 
 
 class RpcMixin:
     def close_service(self, service):
-        if service is None:
-            return
-        loop = service._loop
-        service.close()
-        loop.run_until_complete(service.wait_closed())
+        pass

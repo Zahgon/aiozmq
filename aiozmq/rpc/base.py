@@ -78,9 +78,7 @@ class AttrHandler(AbstractHandler):
 
 def method(func):
     """Marks a decorated function as an RPC endpoint handler."""
-    func.__rpc__ = {}
-    func.__signature__ = inspect.signature(func)
-    return func
+    pass
 
 
 class Service(asyncio.AbstractServer):
@@ -104,25 +102,13 @@ class Service(asyncio.AbstractServer):
         You can use the transport to dynamically bind/unbind,
         connect/disconnect etc.
         """
-        transport = self._proto.transport
-        if transport is None:
-            raise ServiceClosedError()
-        return transport
+        pass
 
     def close(self):
-        if self._proto.closing:
-            return
-        self._proto.closing = True
-        if self._proto.transport is None:
-            return
-        self._proto.transport.close()
+        pass
 
     async def wait_closed(self):
-        if self._proto.transport is None:
-            return
-        waiter = asyncio.Future(loop=self._loop)
-        self._proto.done_waiters.append(waiter)
-        await waiter
+        pass
 
 
 class _BaseProtocol(interface.ZmqProtocol):
@@ -135,12 +121,10 @@ class _BaseProtocol(interface.ZmqProtocol):
         self.closing = False
 
     def connection_made(self, transport):
-        self.transport = transport
+        pass
 
     def connection_lost(self, exc):
-        self.transport = None
-        for waiter in self.done_waiters:
-            waiter.set_result(None)
+        pass
 
 
 class _BaseServerProtocol(_BaseProtocol):
@@ -163,78 +147,23 @@ class _BaseServerProtocol(_BaseProtocol):
         self.timeout = timeout
 
     def connection_lost(self, exc):
-        super().connection_lost(exc)
-        for waiter in list(self.pending_waiters):
-            if not waiter.cancelled():
-                waiter.cancel()
+        pass
 
     def dispatch(self, name):
-        if not name:
-            raise NotFoundError(name)
-        namespaces, sep, method = name.rpartition(".")
-        handler = self.handler
-        if namespaces:
-            for part in namespaces.split("."):
-                try:
-                    handler = handler[part]
-                except KeyError:
-                    raise NotFoundError(name)
-                else:
-                    if not isinstance(handler, AbstractHandler):
-                        raise NotFoundError(name)
-
-        try:
-            func = handler[method]
-        except KeyError:
-            raise NotFoundError(name)
-        else:
-            if isinstance(func, MethodType):
-                holder = func.__func__
-            else:
-                holder = func
-            if not hasattr(holder, "__rpc__"):
-                raise NotFoundError(name)
-            return func
+        pass
 
     def check_args(self, func, args, kwargs):
         """Utility function for validating function arguments
 
         Returns validated (args, kwargs) tuple
         """
-        try:
-            sig = inspect.signature(func)
-            bargs = sig.bind(*args, **kwargs)
-        except TypeError as exc:
-            raise ParametersError(repr(exc)) from exc
-        else:
-            return bargs.args, bargs.kwargs
+        pass
 
     def try_log(self, fut, name, args, kwargs):
-        try:
-            fut.result()
-        except Exception as exc:
-            if self.log_exceptions:
-                for e in self.exclude_log_exceptions:
-                    if isinstance(exc, e):
-                        return
-                logger.exception(
-                    textwrap.dedent(
-                        """\
-                    An exception %r from method %r call occurred.
-                    args = %s
-                    kwargs = %s
-                    """
-                    ),
-                    exc,
-                    name,
-                    pprint.pformat(args),
-                    pprint.pformat(kwargs),
-                )  # noqa
+        pass
 
     def add_pending(self, coro):
-        fut = ensure_future(coro)
-        self.pending_waiters.add(fut)
-        return fut
+        pass
 
     def discard_pending(self, fut):
-        self.pending_waiters.discard(fut)
+        pass

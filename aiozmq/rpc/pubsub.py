@@ -32,17 +32,7 @@ async def connect_pubsub(*, connect=None, bind=None, loop=None, translation_tabl
     Returns PubSubClient instance.
 
     """
-    if loop is None:
-        loop = asyncio.get_event_loop()
-
-    transp, proto = await create_zmq_connection(
-        lambda: _ClientProtocol(loop, translation_table=translation_table),
-        zmq.PUB,
-        connect=connect,
-        bind=bind,
-        loop=loop,
-    )
-    return PubSubClient(loop, proto)
+    pass
 
 
 async def serve_pubsub(
@@ -87,56 +77,12 @@ async def serve_pubsub(
     Raises TypeError if arguments have inappropriate type.
 
     """
-    if loop is None:
-        loop = asyncio.get_event_loop()
-
-    transp, proto = await create_zmq_connection(
-        lambda: _ServerProtocol(
-            loop,
-            handler,
-            translation_table=translation_table,
-            log_exceptions=log_exceptions,
-            exclude_log_exceptions=exclude_log_exceptions,
-            timeout=timeout,
-        ),
-        zmq.SUB,
-        connect=connect,
-        bind=bind,
-        loop=loop,
-    )
-    serv = PubSubService(loop, proto)
-    if subscribe is not None:
-        if isinstance(subscribe, (str, bytes)):
-            subscribe = [subscribe]
-        else:
-            if not isinstance(subscribe, Iterable):
-                raise TypeError("bind should be str, bytes or iterable")
-        for topic in subscribe:
-            serv.subscribe(topic)
-    return serv
+    pass
 
 
 class _ClientProtocol(_BaseProtocol):
     def call(self, topic, name, args, kwargs):
-        if self.transport is None:
-            raise ServiceClosedError()
-        if topic is None:
-            btopic = b""
-        elif isinstance(topic, str):
-            btopic = topic.encode("utf-8")
-        elif isinstance(topic, bytes):
-            btopic = topic
-        else:
-            raise TypeError(
-                "topic argument should be None, str or bytes " "({!r})".format(topic)
-            )
-        bname = name.encode("utf-8")
-        bargs = self.packer.packb(args)
-        bkwargs = self.packer.packb(kwargs)
-        self.transport.write([btopic, bname, bargs, bkwargs])
-        fut = asyncio.Future()
-        fut.set_result(None)
-        return fut
+        pass
 
 
 class PubSubClient(Service):
@@ -151,7 +97,7 @@ class PubSubClient(Service):
 
         topic argument may be None otherwise must be isntance of str or bytes
         """
-        return _MethodCall(self._proto, topic)
+        pass
 
 
 class PubSubService(Service):
@@ -161,13 +107,7 @@ class PubSubService(Service):
         topic argument must be str or bytes.
         Raises TypeError in other cases
         """
-        if isinstance(topic, bytes):
-            btopic = topic
-        elif isinstance(topic, str):
-            btopic = topic.encode("utf-8")
-        else:
-            raise TypeError("topic should be str or bytes, got {!r}".format(topic))
-        self.transport.subscribe(btopic)
+        pass
 
     def unsubscribe(self, topic):
         """Unsubscribe from the topic.
@@ -175,13 +115,7 @@ class PubSubService(Service):
         topic argument must be str or bytes.
         Raises TypeError in other cases
         """
-        if isinstance(topic, bytes):
-            btopic = topic
-        elif isinstance(topic, str):
-            btopic = topic.encode("utf-8")
-        else:
-            raise TypeError("topic should be str or bytes, got {!r}".format(topic))
-        self.transport.unsubscribe(btopic)
+        pass
 
 
 class _MethodCall:
@@ -204,38 +138,7 @@ class _MethodCall:
 
 class _ServerProtocol(_BaseServerProtocol):
     def msg_received(self, data):
-        btopic, bname, bargs, bkwargs = data
-
-        args = self.packer.unpackb(bargs)
-        kwargs = self.packer.unpackb(bkwargs)
-        try:
-            name = bname.decode("utf-8")
-            func = self.dispatch(name)
-            args, kwargs = self.check_args(func, args, kwargs)
-        except (NotFoundError, ParametersError) as exc:
-            fut = asyncio.Future()
-            fut.set_exception(exc)
-        else:
-            if asyncio.iscoroutinefunction(func):
-                fut = self.add_pending(func(*args, **kwargs))
-            else:
-                fut = asyncio.Future()
-                try:
-                    fut.set_result(func(*args, **kwargs))
-                except Exception as exc:
-                    fut.set_exception(exc)
-        fut.add_done_callback(
-            partial(self.process_call_result, name=name, args=args, kwargs=kwargs)
-        )
+        pass
 
     def process_call_result(self, fut, *, name, args, kwargs):
-        self.discard_pending(fut)
-        try:
-            if fut.result() is not None:
-                logger.warning("PubSub handler %r returned not None", name)
-        except asyncio.CancelledError:
-            return
-        except (NotFoundError, ParametersError) as exc:
-            logger.exception("Call to %r caused error: %r", name, exc)
-        except Exception:
-            self.try_log(fut, name, args, kwargs)
+        pass

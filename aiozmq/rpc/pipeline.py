@@ -34,17 +34,7 @@ async def connect_pipeline(
 
     Returns PipelineClient instance.
     """
-    if loop is None:
-        loop = asyncio.get_event_loop()
-
-    transp, proto = await create_zmq_connection(
-        lambda: _ClientProtocol(loop, translation_table=translation_table),
-        zmq.PUSH,
-        connect=connect,
-        bind=bind,
-        loop=loop,
-    )
-    return PipelineClient(loop, proto)
+    pass
 
 
 async def serve_pipeline(
@@ -82,37 +72,12 @@ async def serve_pipeline(
     Returns Service instance.
 
     """
-    if loop is None:
-        loop = asyncio.get_event_loop()
-
-    trans, proto = await create_zmq_connection(
-        lambda: _ServerProtocol(
-            loop,
-            handler,
-            translation_table=translation_table,
-            log_exceptions=log_exceptions,
-            exclude_log_exceptions=exclude_log_exceptions,
-            timeout=timeout,
-        ),
-        zmq.PULL,
-        connect=connect,
-        bind=bind,
-        loop=loop,
-    )
-    return Service(loop, proto)
+    pass
 
 
 class _ClientProtocol(_BaseProtocol):
     def call(self, name, args, kwargs):
-        if self.transport is None:
-            raise ServiceClosedError()
-        bname = name.encode("utf-8")
-        bargs = self.packer.packb(args)
-        bkwargs = self.packer.packb(kwargs)
-        self.transport.write([bname, bargs, bkwargs])
-        fut = asyncio.Future()
-        fut.set_result(None)
-        return fut
+        pass
 
 
 class PipelineClient(Service):
@@ -126,43 +91,12 @@ class PipelineClient(Service):
         The usage is:
         await client.pipeline.ns.func(1, 2)
         """
-        return _MethodCall(self._proto)
+        pass
 
 
 class _ServerProtocol(_BaseServerProtocol):
     def msg_received(self, data):
-        bname, bargs, bkwargs = data
-
-        args = self.packer.unpackb(bargs)
-        kwargs = self.packer.unpackb(bkwargs)
-        try:
-            name = bname.decode("utf-8")
-            func = self.dispatch(name)
-            args, kwargs = self.check_args(func, args, kwargs)
-        except (NotFoundError, ParametersError) as exc:
-            fut = asyncio.Future()
-            fut.set_exception(exc)
-        else:
-            if asyncio.iscoroutinefunction(func):
-                fut = self.add_pending(func(*args, **kwargs))
-            else:
-                fut = asyncio.Future()
-                try:
-                    fut.set_result(func(*args, **kwargs))
-                except Exception as exc:
-                    fut.set_exception(exc)
-        fut.add_done_callback(
-            partial(self.process_call_result, name=name, args=args, kwargs=kwargs)
-        )
+        pass
 
     def process_call_result(self, fut, *, name, args, kwargs):
-        self.discard_pending(fut)
-        try:
-            if fut.result() is not None:
-                logger.warning("Pipeline handler %r returned not None", name)
-        except (NotFoundError, ParametersError) as exc:
-            logger.exception("Call to %r caused error: %r", name, exc)
-        except asyncio.CancelledError:
-            return
-        except Exception:
-            self.try_log(fut, name, args, kwargs)
+        pass

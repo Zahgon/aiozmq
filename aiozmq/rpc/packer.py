@@ -31,38 +31,13 @@ class _Packer:
             self._unpack_cache[code] = unpacker
 
     def packb(self, data):
-        return packb(data, use_bin_type=True, default=self.ext_type_pack_hook)
+        pass
 
     def unpackb(self, packed):
-        return unpackb(
-            packed, use_list=False, raw=False, ext_hook=self.ext_type_unpack_hook
-        )
+        pass
 
     def ext_type_pack_hook(self, obj, _sentinel=object()):
-        obj_class = obj.__class__
-        hit = self._pack_cache.get(obj_class, _sentinel)
-        if hit is None:
-            # packer has been not found by previous long-lookup
-            raise TypeError("Unknown type: {!r}".format(obj))
-        elif hit is _sentinel:
-            # do long-lookup
-            for code in sorted(self.translation_table):
-                cls, packer, unpacker = self.translation_table[code]
-                if isinstance(obj, cls):
-                    self._pack_cache[obj_class] = (code, packer)
-                    self._unpack_cache[code] = unpacker
-                    return ExtType(code, packer(obj))
-            else:
-                self._pack_cache[obj_class] = None
-                raise TypeError("Unknown type: {!r}".format(obj))
-        else:
-            # do shortcut
-            code, packer = hit
-            return ExtType(code, packer(obj))
+        pass
 
     def ext_type_unpack_hook(self, code, data):
-        try:
-            unpacker = self._unpack_cache[code]
-            return unpacker(data)
-        except KeyError:
-            return ExtType(code, data)
+        pass
